@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WORD ORDER QUEST - 英文法並べ替えドリル (中1)</title>
+  <style>
+    :root {
+      --bg-dark: #080b14;
+      --card-bg: rgba(16, 23, 42, 0.88);
+      --border-neon: rgba(56, 189, 248, 0.4);
+      --neon-cyan: #00f0ff;
+      --cyan-glow: rgba(0, 240, 255, 0.45);
+      --neon-pink: #ff2a85;
+      --pink-glow: rgba(255, 42, 133, 0.5);
+      --neon-purple: #a855f7;
+      --purple-glow: rgba(168, 85, 247, 0.4);
+      --neon-yellow: #fde047;
+      --yellow-glow: rgba(253, 224, 71, 0.4);
+      --neon-green: #10b981;
+      --green-glow: rgba(16, 185, 129, 0.45);
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(0, 240, 255, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 90% 10%, rgba(255, 42, 133, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 50% 80%, rgba(168, 85, 247, 0.15) 0%, transparent 50%);
+      color: var(--text-main);
+      margin: 0;
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .container {
+      width: 100%;
+      max-width: 660px;
+      background: var(--card-bg);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border-neon);
+      padding: 24px;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(0, 240, 255, 0.15);
+      position: relative;
+    }
+
+    /* 学習ステータス（ネオンメーター風） */
+    .status-dashboard {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.7) 100%);
+      border: 1px solid var(--neon-cyan);
+      border-radius: 14px;
+      padding: 12px 16px;
+      margin-bottom: 22px;
+      display: flex;
+      justify-content: space-around;
+      text-align: center;
+      box-shadow: 0 0 15px var(--cyan-glow), inset 0 0 15px rgba(0, 240, 255, 0.1);
+    }
+    .status-item { display: flex; flex-direction: column; gap: 3px; }
+    .status-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--neon-cyan);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .status-val {
+      font-size: 16px;
+      font-weight: 900;
+      color: #ffffff;
+      text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+    }
+
+    /* ステージ選択カード */
+    .stage-list { display: flex; flex-direction: column; gap: 10px; }
+    .btn-stage {
+      background: rgba(30, 41, 59, 0.65);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 12px;
+      padding: 14px 18px;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text-main);
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-stage::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 4px; height: 100%;
+      background: var(--neon-cyan);
+      box-shadow: 0 0 10px var(--neon-cyan);
+    }
+    .btn-stage:hover {
+      border-color: var(--neon-cyan);
+      background: rgba(40, 56, 84, 0.85);
+      transform: translateY(-2px);
+      box-shadow: 0 0 18px var(--cyan-glow);
+    }
+    .btn-stage.cleared {
+      border-color: var(--neon-green);
+      background: rgba(16, 185, 129, 0.08);
+    }
+    .btn-stage.cleared::before {
+      background: var(--neon-green);
+      box-shadow: 0 0 10px var(--neon-green);
+    }
+    .stage-num {
+      font-size: 15px;
+      font-weight: 900;
+      color: var(--neon-cyan);
+      letter-spacing: 0.5px;
+    }
+    .stage-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-left: 8px;
+    }
+    .crest-badge {
+      font-size: 12px;
+      font-weight: 800;
+      color: #34d399;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid var(--neon-green);
+      padding: 4px 10px;
+      border-radius: 20px;
+      display: none;
+      box-shadow: 0 0 8px var(--green-glow);
+    }
+    .btn-stage.cleared .crest-badge { display: inline-block; }
+
+    /* サブステージ選択カード (1-1, 1-2, 1-BOSS) */
+    .substage-btn {
+      background: rgba(30, 41, 59, 0.7);
+      border: 1.5px solid rgba(56, 189, 248, 0.3);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      color: white;
+      transition: all 0.2s;
+    }
+    .substage-btn:hover {
+      border-color: var(--neon-cyan);
+      background: rgba(0, 240, 255, 0.12);
+      transform: translateX(4px);
+      box-shadow: 0 0 14px var(--cyan-glow);
+    }
+    .substage-btn.boss-card {
+      border-color: var(--neon-pink);
+      background: linear-gradient(135deg, rgba(255, 42, 133, 0.15) 0%, rgba(30, 41, 59, 0.8) 100%);
+    }
+    .substage-btn.boss-card:hover {
+      border-color: #ff4d9a;
+      box-shadow: 0 0 20px var(--pink-glow);
+    }
+    .substage-badge {
+      font-size: 11px;
+      font-weight: 800;
+      background: rgba(0, 240, 255, 0.15);
+      color: var(--neon-cyan);
+      padding: 3px 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(0, 240, 255, 0.3);
+    }
+
+    /* クイズ画面ヘッダー */
+    .battle-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .stage-tag {
+      background: rgba(0, 240, 255, 0.15);
+      color: var(--neon-cyan);
+      border: 1px solid var(--neon-cyan);
+      padding: 4px 10px;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 13px;
+      box-shadow: 0 0 8px var(--cyan-glow);
+    }
+    .combo-badge {
+      font-size: 12px;
+      font-weight: 900;
+      color: var(--neon-yellow);
+      background: rgba(253, 224, 71, 0.15);
+      border: 1px solid var(--neon-yellow);
+      padding: 3px 10px;
+      border-radius: 12px;
+      display: none;
+      box-shadow: 0 0 10px var(--yellow-glow);
+      animation: comboBlink 1.2s infinite alternate;
+    }
+    @keyframes comboBlink {
+      from { transform: scale(1); }
+      to { transform: scale(1.04); }
+    }
+
+    /* きらきらピクセルボス枠（boss.jpeg専用） */
+    .boss-view-card {
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.85) 100%);
+      border: 2px solid var(--neon-pink);
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 16px;
+      text-align: center;
+      box-shadow: 0 0 24px var(--pink-glow);
+      display: none;
+      animation: neonPulse 2s infinite alternate;
+    }
+    @keyframes neonPulse {
+      0% { box-shadow: 0 0 16px var(--pink-glow); }
+      100% { box-shadow: 0 0 30px var(--pink-glow); }
+    }
+    .boss-img-real {
+      width: 140px;
+      height: 140px;
+      object-fit: cover;
+      image-rendering: pixelated;
+      border-radius: 12px;
+      border: 2px solid var(--neon-purple);
+      margin: 0 auto;
+      box-shadow: 0 0 15px var(--purple-glow);
+      display: block;
+    }
+    .boss-warning-tag {
+      font-size: 13px;
+      font-weight: 900;
+      color: #ff80b3;
+      letter-spacing: 0.5px;
+      margin-top: 8px;
+      text-shadow: 0 0 8px var(--pink-glow);
+    }
+
+    /* ネオンプログレスバー */
+    .progress-bar-container {
+      width: 100%;
+      height: 7px;
+      background: rgba(30, 41, 59, 0.8);
+      border-radius: 4px;
+      margin-bottom: 14px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+      transition: width 0.3s ease;
+      box-shadow: 0 0 10px var(--cyan-glow);
+    }
+
+    /* 問題カード */
+    .quest-box {
+      font-size: 17px;
+      font-weight: 800;
+      margin-bottom: 16px;
+      line-height: 1.45;
+      color: #ffffff;
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 14px 16px;
+      border-radius: 12px;
+      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+    .context-hint {
+      font-size: 12px;
+      font-weight: 600;
+      color: #94a3b8;
+      margin-bottom: 4px;
+      display: block;
+    }
+    .area-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: #94a3b8;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    /* 解答欄 & 単語チップ */
+    .answer-box {
+      min-height: 60px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 2px dashed rgba(0, 240, 255, 0.4);
+      border-radius: 12px;
+      padding: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 18px;
+      transition: border-color 0.2s;
+    }
+    .options-box {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 52px;
+      margin-bottom: 22px;
+    }
+    .chip {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1.5px solid #334155;
+      color: #f1f5f9;
+      border-radius: 10px;
+      padding: 9px 15px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .chip:hover {
+      border-color: var(--neon-cyan);
+      transform: translateY(-2px);
+      box-shadow: 0 0 12px var(--cyan-glow);
+    }
+    .chip-first {
+      border-color: var(--neon-cyan);
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.2) 0%, rgba(15, 23, 42, 0.9) 100%);
+      color: var(--neon-cyan);
+      font-weight: 800;
+      box-shadow: 0 0 12px var(--cyan-glow);
+    }
+
+    /* 操作ボタン */
+    .btn-row { display: flex; gap: 10px; }
+    button {
+      flex: 1;
+      padding: 12px;
+      font-size: 15px;
+      font-weight: 800;
+      border-radius: 10px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-submit {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      border: 1px solid var(--neon-cyan);
+      color: white;
+      box-shadow: 0 0 14px var(--cyan-glow);
+    }
+    .btn-submit:hover {
+      background: #0ea5e9;
+      box-shadow: 0 0 20px var(--cyan-glow);
+    }
+    .btn-reset {
+      background: rgba(51, 65, 85, 0.6);
+      color: #cbd5e1;
+      border: 1px solid #475569;
+    }
+    .btn-reset:hover { background: rgba(71, 85, 105, 0.8); }
+    .btn-back {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #94a3b8;
+      padding: 5px 12px;
+      font-size: 12px;
+      border-radius: 6px;
+      flex: none;
+    }
+    .btn-back:hover { border-color: #fff; color: #fff; }
+
+    /* 判定結果ボックス */
+    .result-box {
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 12px;
+      display: none;
+    }
+    .result-correct {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1.5px solid var(--neon-green);
+      color: #6ee7b7;
+      box-shadow: 0 0 16px var(--green-glow);
+    }
+    .result-wrong {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1.5px solid #ef4444;
+      color: #fca5a5;
+    }
+    .result-hint {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1.5px solid var(--neon-yellow);
+      color: #fde68a;
+      box-shadow: 0 0 14px var(--yellow-glow);
+    }
+    .btn-next {
+      margin-top: 12px;
+      width: 100%;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      box-shadow: 0 0 14px var(--green-glow);
+    }
+
+    /* クラッカーキャンバス */
+    #confetti-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* モーダル */
+    .congrats-modal-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(5, 8, 16, 0.88);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .congrats-card {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 2px solid var(--neon-yellow);
+      padding: 28px 24px;
+      border-radius: 18px;
+      max-width: 420px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 0 30px var(--yellow-glow);
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<!-- ステージクリアモーダル -->
+<div class="congrats-modal-overlay" id="congrats-modal">
+  <div class="congrats-card">
+    <div style="font-size: 42px; margin-bottom: 6px;" id="modal-icon">🎉 ⭕ ✨</div>
+    <h2 style="font-size: 22px; margin: 0; color: #fde047; text-shadow: 0 0 10px var(--yellow-glow);" id="modal-title">CLEAR!</h2>
+    <p style="font-size: 14px; color: #cbd5e1; margin: 10px 0 16px;" id="modal-desc">すべての問題をクリアしました！</p>
+    <button onclick="closeCongratsModal()" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 12px; border-radius: 10px; width: 100%; font-size: 15px; box-shadow: 0 0 14px var(--yellow-glow);">
+      ステージ選択へ戻る
+    </button>
+  </div>
+</div>
+
+<div class="container">
+  <!-- 1. メインステージ選択 -->
+  <div id="main-menu-view">
+    <div style="text-align: center; margin-bottom: 16px;">
+      <h1 style="font-size: 22px; margin: 0 0 4px 0; color: #f8fafc; text-shadow: 0 0 12px var(--cyan-glow);">
+        WORD ORDER QUEST
+      </h1>
+      <p style="font-size: 13px; color: var(--text-sub); margin: 0;">中1 英文法 語順トレーニング</p>
+    </div>
+
+    <div class="status-dashboard">
+      <div class="status-item">
+        <span class="status-label">連続日数</span>
+        <span class="status-val" id="streak-days">1日</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">スコア</span>
+        <span class="status-val" id="exp-count" style="color: var(--neon-cyan);">0 pt</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">制覇ステージ</span>
+        <span class="status-val" id="stamps-count">0 / 10</span>
+      </div>
+    </div>
+
+    <div class="stage-list" id="stage-buttons"></div>
+  </div>
+
+  <!-- 2. サブステージ選択（1-1, 1-2, 1-3, 1-BOSS） -->
+  <div id="substage-menu-view" style="display: none;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+      <button class="btn-back" onclick="backToMainMenu()">◀ ステージ選択へ</button>
+      <span class="stage-tag" id="substage-main-title"></span>
+    </div>
+    <div style="text-align: center; margin-bottom: 16px;">
+      <h2 style="font-size: 18px; margin: 0 0 4px; color: #fff;" id="substage-heading"></h2>
+      <p style="font-size: 12px; color: #94a3b8; margin: 0;">挑戦するパートを選んでください</p>
+    </div>
+    <div class="stage-list" id="substage-buttons"></div>
+  </div>
+
+  <!-- 3. バトル（問題解答）画面 -->
+  <div id="quiz-view" style="display: none;">
+    <div class="battle-header">
+      <div>
+        <button class="btn-back" onclick="backToSubstageMenu()">◀ もどる</button>
+        <span class="stage-tag" id="current-battle-title" style="margin-left: 6px;"></span>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <span class="combo-badge" id="combo-display">⚡ 2 COMBO!</span>
+        <span id="progress" style="font-size: 12px; font-weight: 700; color: #94a3b8;"></span>
+      </div>
+    </div>
+
+    <!-- ネオンバー -->
+    <div class="progress-bar-container">
+      <div class="progress-bar-fill" id="hp-progress"></div>
+    </div>
+
+    <!-- ピクセル画ボス表示（boss.jpeg専用フレーム） -->
+    <div class="boss-view-card" id="boss-card">
+      <img src="boss.jpeg" alt="BOSS: WORD SCRAMBLER" class="boss-img-real" onerror="this.style.display='none';">
+      <div class="boss-warning-tag">⚠️ BOSS BATTLE：不要な単語を1つ見抜け！</div>
+    </div>
+
+    <div class="quest-box" id="jp-text"></div>
+
+    <div class="area-label">ならべた英文（タップで戻す）</div>
+    <div class="answer-box" id="answer-box"></div>
+
+    <div class="area-label">えらぶ単語</div>
+    <div class="options-box" id="options-box"></div>
+
+    <div class="btn-row">
+      <button class="btn-reset" onclick="resetCurrentQuestion()">リセット</button>
+      <button class="btn-submit" onclick="checkAnswer()">決定する</button>
+    </div>
+
+    <div class="result-box" id="result-box">
+      <strong id="result-title" style="font-size: 15px; display: block; margin-bottom: 4px;"></strong>
+      <p id="correct-answer-text" style="font-weight: 700; margin: 4px 0 8px;"></p>
+      <button class="btn-next" id="btn-next-action" onclick="nextQuestion()">次の問題へ進む ▶</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // メインステージ定義（純粋な文法項目名）
+  const mainStageList = [
+    { id: "Stage 1", name: "STAGE 1", grammar: "be動詞 / 一般動詞" },
+    { id: "Stage 2", name: "STAGE 2", grammar: "助動詞 can / 人称代名詞" },
+    { id: "Stage 3", name: "STAGE 3", grammar: "疑問詞 (5W1H)" },
+    { id: "Stage 4", name: "STAGE 4", grammar: "命令文 / 数量・時刻" },
+    { id: "Stage 5", name: "STAGE 5", grammar: "三人称単数現在 (三単現の -s)" },
+    { id: "Stage 6", name: "STAGE 6", grammar: "代名詞の格変化 / Whose / Which" },
+    { id: "Stage 7", name: "STAGE 7", grammar: "現在進行形 (be + -ing) / 感嘆文" },
+    { id: "Stage 8", name: "STAGE 8", grammar: "不定詞 (to + 動詞の原形)" },
+    { id: "Stage 9", name: "STAGE 9", grammar: "一般動詞の過去形" },
+    { id: "Stage 10", name: "STAGE 10", grammar: "be動詞の過去形 / 過去進行形 / There is" }
+  ];
+
+  // サブステージ定義
+  const subStageList = [
+    // STAGE 1
+    { id: "1-1", stageId: "Stage 1", num: "1-1", title: "be動詞の肯定文", count: 4, isBoss: false },
+    { id: "1-2", stageId: "Stage 1", num: "1-2", title: "一般動詞（肯定・否定・疑問）", count: 6, isBoss: false },
+    { id: "1-3", stageId: "Stage 1", num: "1-3", title: "be動詞の否定文・疑問文", count: 11, isBoss: false },
+    { id: "1-BOSS", stageId: "Stage 1", num: "1-BOSS", title: "チャレンジ問題（不要語あり）", count: 1, isBoss: true },
+
+    // STAGE 2
+    { id: "2-1", stageId: "Stage 2", num: "2-1", title: "He, She is の文", count: 8, isBoss: false },
+    { id: "2-2", stageId: "Stage 2", num: "2-2", title: "助動詞 can の文", count: 6, isBoss: false },
+    { id: "2-3", stageId: "Stage 2", num: "2-3", title: "This, That is の文", count: 6, isBoss: false },
+    { id: "2-BOSS", stageId: "Stage 2", num: "2-BOSS", title: "チャレンジ問題（不要語あり）", count: 1, isBoss: true },
+
+    // STAGE 3
+    { id: "3-1", stageId: "Stage 3", num: "3-1", title: "What / Who の疑問文", count: 4, isBoss: false },
+    { id: "3-2", stageId: "Stage 3", num: "3-2", title: "How / When の疑問文", count: 3, isBoss: false },
+    { id: "3-3", stageId: "Stage 3", num: "3-3", title: "Where の疑問文", count: 2, isBoss: false },
+    { id: "3-BOSS", stageId: "Stage 3", num: "3-BOSS", title: "チャレンジ問題（不要語あり）", count: 1, isBoss: true },
+
+    // STAGE 4
+    { id: "4-1", stageId: "Stage 4", num: "4-1", title: "How many の疑問文", count: 2, isBoss: false },
+    { id: "4-2", stageId: "Stage 4", num: "4-2", title: "What time / What + 名詞", count: 4, isBoss: false },
+    { id: "4-3", stageId: "Stage 4", num: "4-3", title: "命令文（肯定・否定）", count: 3, isBoss: false },
+    { id: "4-BOSS", stageId: "Stage 4", num: "4-BOSS", title: "チャレンジ問題（不要語あり）", count: 1, isBoss: true },
+
+    // STAGE 5
+    { id: "5-1", stageId: "Stage 5", num: "5-1", title: "三単現の肯定文 (-s / -es)", count: 4, isBoss: false },
+    { id: "5-2", stageId: "Stage 5", num: "5-2", title: "三単現の疑問文 (Does...?)", count: 4, isBoss: false },
+    { id: "5-3", stageId: "Stage 5", num: "5-3", title: "三単現の否定文 (doesn't)", count: 2, isBoss: false },
+    { id: "5-BOSS", stageId: "Stage 5", num: "5-BOSS", title: "チャレンジ問題（不要語あり）", count: 1, isBoss: true },
+
+    // STAGE 6
+    { id: "6-1", stageId: "Stage 6", num: "6-1", title: "代名詞の目的格 (him, her)", count: 4, isBoss: false },
+    { id: "6-2", stageId: "Stage 6", num: "6-2", title: "Whose の疑問文", count: 4, isBoss: false },
+    { id: "6-3", stageId: "Stage 6", num: "6-3", title: "Which の疑問文", count: 2, isBoss: false },
+    { id: "6-BOSS", stageId: "Stage 6", num: "6-BOSS", title: "チャレンジ問題（不要語あり）", count: 2, isBoss: true },
+
+    // STAGE 7
+    { id: "7-1", stageId: "Stage 7", num: "7-1", title: "現在進行形の肯定文", count: 3, isBoss: false },
+    { id: "7-2", stageId: "Stage 7", num: "7-2", title: "現在進行形の疑問文", count: 6, isBoss: false },
+    { id: "7-3", stageId: "Stage 7", num: "7-3", title: "感嘆文 (How, What)", count: 2, isBoss: false },
+    { id: "7-BOSS", stageId: "Stage 7", num: "7-BOSS", title: "チャレンジ問題（不要語あり）", count: 2, isBoss: true },
+
+    // STAGE 8
+    { id: "8-1", stageId: "Stage 8", num: "8-1", title: "want to / try to", count: 2, isBoss: false },
+    { id: "8-2", stageId: "Stage 8", num: "8-2", title: "疑問詞 + want to", count: 2, isBoss: false },
+    { id: "8-3", stageId: "Stage 8", num: "8-3", title: "look + 形容詞", count: 2, isBoss: false },
+    { id: "8-BOSS", stageId: "Stage 8", num: "8-BOSS", title: "チャレンジ問題（不要語あり）", count: 1, isBoss: true },
+
+    // STAGE 9
+    { id: "9-1", stageId: "Stage 9", num: "9-1", title: "過去形の肯定文", count: 6, isBoss: false },
+    { id: "9-2", stageId: "Stage 9", num: "9-2", title: "過去形の疑問文 (Did...?)", count: 9, isBoss: false },
+    { id: "9-3", stageId: "Stage 9", num: "9-3", title: "過去形の否定文 (didn't)", count: 5, isBoss: false },
+    { id: "9-BOSS", stageId: "Stage 9", num: "9-BOSS", title: "チャレンジ問題（不要語あり）", count: 1, isBoss: true },
+
+    // STAGE 10
+    { id: "10-1", stageId: "Stage 10", num: "10-1", title: "be動詞の過去形 (was, were)", count: 3, isBoss: false },
+    { id: "10-2", stageId: "Stage 10", num: "10-2", title: "過去進行形 (was / were + -ing)", count: 2, isBoss: false },
+    { id: "10-3", stageId: "Stage 10", num: "10-3", title: "There is / are の文", count: 4, isBoss: false },
+    { id: "10-BOSS", stageId: "Stage 10", num: "10-BOSS", title: "チャレンジ問題（不要語あり）", count: 1, isBoss: true }
+  ];
+
+  // 全問題データ
+  const quizData = [
+    // STAGE 1-1
+    { subId: "1-1", japanese: "私はハチワレです。", words: ["I", "am", "Hachiware", "."], answer: "I am Hachiware ." },
+    { subId: "1-1", japanese: "私はチョコレートが好きです。", words: ["I", "like", "chocolate", "."], answer: "I like chocolate ." },
+    { subId: "1-1", japanese: "私は大阪の出身です。", words: ["I", "am", "from", "Osaka", "."], answer: "I am from Osaka ." },
+    { subId: "1-1", japanese: "私はドラえもんが大好きです。", words: ["I", "love", "Doraemon", "."], answer: "I love Doraemon ." },
+
+    // STAGE 1-2
+    { subId: "1-2", japanese: "あなたはちいかわが好きですか。", words: ["Do", "you", "like", "Chiikawa", "?"], answer: "Do you like Chiikawa ?" },
+    { subId: "1-2", hint: "「Do you like Chiikawa?」への返答", japanese: "はい、好きです。", words: ["Yes", ",", "I", "do", "."], answer: "Yes , I do ." },
+    { subId: "1-2", japanese: "あなたはバスケットボールをしますか。", words: ["Do", "you", "play", "basketball", "?"], answer: "Do you play basketball ?" },
+    { subId: "1-2", hint: "「Do you play basketball?」への返答", japanese: "いいえ、しません。", words: ["No", ",", "I", "do", "not", "."], answer: "No , I do not ." },
+    { subId: "1-2", japanese: "私はギターをひきません。", words: ["I", "do", "not", "play", "the guitar", "."], answer: "I do not play the guitar ." },
+    { subId: "1-2", japanese: "私はホラー映画を見ません。", words: ["I", "don't", "watch", "horror movies", "."], answer: "I don't watch horror movies ." },
+
+    // STAGE 1-3
+    { subId: "1-3", japanese: "あなたは阪神ファンですか。", words: ["Are", "you", "a Hanshin Tigers fan", "?"], answer: "Are you a Hanshin Tigers fan ?" },
+    { subId: "1-3", hint: "「Are you a Hanshin Tigers fan?」への返答", japanese: "はい、そうです。", words: ["Yes", ",", "I", "am", "."], answer: "Yes , I am ." },
+    { subId: "1-3", japanese: "あなたはアメリカの出身ですか。", words: ["Are", "you", "from", "America", "?"], answer: "Are you from America ?" },
+    { subId: "1-3", hint: "「Are you from America?」への返答", japanese: "いいえ、ちがいます。", words: ["No", ",", "I", "am", "not", "."], answer: "No , I am not ." },
+    { subId: "1-3", japanese: "私はコナンではありません。", words: ["I", "am", "not", "Conan", "."], answer: "I am not Conan ." },
+    { subId: "1-3", japanese: "あなたはバスケットボールチームの一員ですか。", words: ["Are", "you", "on", "the basketball team", "?"], answer: "Are you on the basketball team ?" },
+    { subId: "1-3", hint: "「Are you on the basketball team?」への返答", japanese: "はい、そうです。", words: ["Yes", ",", "I", "am", "."], answer: "Yes , I am ." },
+    { subId: "1-3", japanese: "私は北海道の出身ではありません。", words: ["I'm", "not", "from", "Hokkaido", "."], answer: "I'm not from Hokkaido ." },
+    { subId: "1-3", japanese: "あなたは今、美術部に入っていますか。", words: ["Are", "you", "in the art club", "now", "?"], answer: "Are you in the art club now ?" },
+    { subId: "1-3", hint: "「Are you in the art club now?」への返答", japanese: "いいえ、入っていません。", words: ["No", ",", "I'm", "not", "."], answer: "No , I'm not ." },
+    { subId: "1-3", japanese: "私は巨人ファンではありません。", words: ["I", "am", "not", "a Yomiuri Giants fan", "."], answer: "I am not a Yomiuri Giants fan ." },
+
+    // STAGE 1-BOSS
+    { subId: "1-BOSS", isBoss: true, japanese: "【BOSS】私は新しい赤いかばんを持っています。（不要語1つ）", words: ["new", "has", "bag", "I", "red", "a", "have", "."], targetWords: ["I", "have", "a", "new", "red", "bag", "."], answer: "I have a new red bag ." },
+
+    // STAGE 2
+    { subId: "2-1", japanese: "中田先生は私たちの先生です。", words: ["Ms. Nakada", "is", "our", "teacher", "."], answer: "Ms. Nakada is our teacher ." },
+    { subId: "2-1", japanese: "彼はサッカー部に入っていません。", words: ["He", "is", "not", "in the soccer club", "."], answer: "He is not in the soccer club ." },
+    { subId: "2-1", japanese: "彼女は私たちのリーダーです。", words: ["She", "is", "our", "leader", "."], answer: "She is our leader ." },
+    { subId: "2-1", japanese: "彼女はホラー映画のファンではありません。", words: ["She", "is", "not", "a horror movie fan", "."], answer: "She is not a horror movie fan ." },
+    { subId: "2-1", japanese: "コナンはサッカーが得意ですか。", words: ["Is", "Conan", "good", "at", "playing soccer", "?"], answer: "Is Conan good at playing soccer ?" },
+    { subId: "2-1", hint: "「Is Conan good at playing soccer?」への返答", japanese: "はい、そうです。", words: ["Yes", ",", "he", "is", "."], answer: "Yes , he is ." },
+    { subId: "2-1", japanese: "哀は親しみやすいですか。", words: ["Is", "Ai", "friendly", "?"], answer: "Is Ai friendly ?" },
+    { subId: "2-1", hint: "「Is Ai friendly?」への返答", japanese: "いいえ、ちがいます。", words: ["No", ",", "she", "is", "not", "."], answer: "No , she is not ." },
+
+    { subId: "2-2", japanese: "私は日本語を話すことができます。", words: ["I", "can", "speak", "Japanese", "."], answer: "I can speak Japanese ." },
+    { subId: "2-2", japanese: "ルフィは泳げません。", words: ["Luffy", "cannot", "swim", "."], answer: "Luffy cannot swim ." },
+    { subId: "2-2", japanese: "あなたはギターをひくことができますか。", words: ["Can", "you", "play", "the guitar", "?"], answer: "Can you play the guitar ?" },
+    { subId: "2-2", hint: "「Can you play the guitar?」への返答", japanese: "はい、できます。", words: ["Yes", ",", "I", "can", "."], answer: "Yes , I can ." },
+    { subId: "2-2", japanese: "あなたはオムライスを作ることができますか。", words: ["Can", "you", "make", "omelet rice", "?"], answer: "Can you make omelet rice ?" },
+    { subId: "2-2", hint: "「Can you make omelet rice?」への返答", japanese: "いいえ、できません。", words: ["No", ",", "I", "cannot", "."], answer: "No , I cannot ." },
+
+    { subId: "2-3", japanese: "これはあなたの帽子です。", words: ["This", "is", "your", "hat", "."], answer: "This is your hat ." },
+    { subId: "2-3", japanese: "あれは私たちの体育館です。", words: ["That", "is", "our", "gym", "."], answer: "That is our gym ." },
+    { subId: "2-3", japanese: "あれはちいかわですか。", words: ["Is", "that", "Chiikawa", "?"], answer: "Is that Chiikawa ?" },
+    { subId: "2-3", hint: "「Is that Chiikawa?」への返答", japanese: "はい、そうです。", words: ["Yes", ",", "it", "is", "."], answer: "Yes , it is ." },
+    { subId: "2-3", japanese: "これは蝶ネクタイですか。", words: ["Is", "this", "a bow tie", "?"], answer: "Is this a bow tie ?" },
+    { subId: "2-3", hint: "「Is this a bow tie?」への返答", japanese: "いいえ、ちがいます。", words: ["No", ",", "it", "is", "not", "."], answer: "No , it is not ." },
+
+    { subId: "2-BOSS", isBoss: true, japanese: "【BOSS】ドラえもんは未来に行くことができます。（不要語1つ）", words: ["future", "goes", "the", "can", "Doraemon", "to", "go", "."], targetWords: ["Doraemon", "can", "go", "to", "the", "future", "."], answer: "Doraemon can go to the future ." },
+
+    // STAGE 3
+    { subId: "3-1", japanese: "あれは何ですか。", words: ["What", "is", "that", "?"], answer: "What is that ?" },
+    { subId: "3-1", hint: "「What is that?」への返答", japanese: "それはスケートボードです。", words: ["It", "is", "a skateboard", "."], answer: "It is a skateboard ." },
+    { subId: "3-1", japanese: "こちらはだれですか。", words: ["Who", "is", "this", "?"], answer: "Who is this ?" },
+    { subId: "3-1", hint: "「Who is this?」への返答", japanese: "ハチワレです。", words: ["This", "is", "Hachiware", "."], answer: "This is Hachiware ." },
+
+    { subId: "3-2", japanese: "あなたはどうやって公園に行きますか。", words: ["How", "do", "you", "go", "to the park", "by bike", "?"], answer: "How do you go to the park by bike ?" },
+    { subId: "3-2", hint: "「How do you go to the park?」への返答", japanese: "私は自転車で行きます。", words: ["I", "go", "to the park", "by bike", "."], answer: "I go to the park by bike ." },
+    { subId: "3-2", japanese: "あなたはいつゲームをしますか。", words: ["When", "do", "you", "play", "video games", "?"], answer: "When do you play video games ?" },
+
+    { subId: "3-3", japanese: "私のスマートフォンはどこにありますか。", words: ["Where", "is", "my", "smartphone", "?"], answer: "Where is my smartphone ?" },
+    { subId: "3-3", hint: "「Where is my smartphone?」への返答", japanese: "それはあなたのかばんの中にあります。", words: ["It", "is", "in your bag", "."], answer: "It is in your bag ." },
+
+    { subId: "3-BOSS", isBoss: true, japanese: "【BOSS】ドラえもんのポケットはどこにありますか。（不要語1つ）", words: ["pocket", "Where", "are", "Doraemon's", "is", "?"], targetWords: ["Where", "is", "Doraemon's", "pocket", "?"], answer: "Where is Doraemon's pocket ?" },
+
+    // STAGE 4
+    { subId: "4-1", japanese: "あなたは帽子を何個ほしいですか。", words: ["How", "many", "hats", "do", "you", "want", "?"], answer: "How many hats do you want ?" },
+    { subId: "4-1", hint: "「How many hats do you want?」への返答", japanese: "私は3個の帽子がほしいです。", words: ["I", "want", "three", "hats", "."], answer: "I want three hats ." },
+
+    { subId: "4-2", japanese: "何時ですか。", words: ["What", "time", "is", "it", "?"], answer: "What time is it ?" },
+    { subId: "4-2", hint: "「What time is it?」への返答", japanese: "7時です。", words: ["It", "is", "seven", "."], answer: "It is seven ." },
+    { subId: "4-2", japanese: "あなたはどんな音楽が好きですか。", words: ["What", "music", "do", "you", "like", "?"], answer: "What music do you like ?" },
+    { subId: "4-2", hint: "「What music do you like?」への返答", japanese: "私はポップミュージックが好きです。", words: ["I", "like", "pop music", "."], answer: "I like pop music ." },
+
+    { subId: "4-3", japanese: "私のペンを使いなさい。", words: ["Use", "my", "pen", "."], answer: "Use my pen ." },
+    { subId: "4-3", japanese: "親切にして、ジャイアン。", words: ["Be", "kind", ",", "Gian", "."], answer: "Be kind , Gian ." },
+    { subId: "4-3", japanese: "ここで泳いではいけません。", words: ["Don't", "swim", "here", "."], answer: "Don't swim here ." },
+
+    { subId: "4-BOSS", isBoss: true, japanese: "【BOSS】ジャイアン、ここで歌わないで！（不要語1つ）", words: ["here", "Gian", "sing", "Don't", "sings", ",", "!"], targetWords: ["Don't", "sing", "here", ",", "Gian", "!"], answer: "Don't sing here , Gian !" },
+
+    // STAGE 5
+    { subId: "5-1", japanese: "大谷翔平は毎日野球をします。", words: ["Shohei Ohtani", "plays", "baseball", "every day", "."], answer: "Shohei Ohtani plays baseball every day ." },
+    { subId: "5-1", japanese: "のび太はよく昼寝をします。", words: ["Nobita", "often", "takes", "a nap", "."], answer: "Nobita often takes a nap ." },
+    { subId: "5-1", japanese: "大森元貴は歌を歌います。", words: ["Motoki Ohmori", "sings", "songs", "."], answer: "Motoki Ohmori sings songs ." },
+    { subId: "5-1", japanese: "若井滉斗はギターを弾きます。", words: ["Hiroto Wakai", "plays", "the guitar", "."], answer: "Hiroto Wakai plays the guitar ." },
+
+    { subId: "5-2", japanese: "ドラえもんはどら焼きが好きですか。", words: ["Does", "Doraemon", "like", "dorayaki", "?"], answer: "Does Doraemon like dorayaki ?" },
+    { subId: "5-2", hint: "「Does Doraemon like dorayaki?」への返答", japanese: "はい、好きです。", words: ["Yes", ",", "he", "does", "."], answer: "Yes , he does ." },
+    { subId: "5-2", japanese: "ジャイ子はピアノをひきますか。", words: ["Does", "Jaiko", "play", "the piano", "?"], answer: "Does Jaiko play the piano ?" },
+    { subId: "5-2", hint: "「Does Jaiko play the piano?」への返答", japanese: "いいえ、ひきません。", words: ["No", ",", "she", "does", "not", "."], answer: "No , she does not ." },
+
+    { subId: "5-3", japanese: "ドラえもんはネズミが好きではありません。", words: ["Doraemon", "does", "not", "like", "mice", "."], answer: "Doraemon does not like mice ." },
+    { subId: "5-3", japanese: "私の兄はバスケットボールをしません。", words: ["My brother", "doesn't", "play", "basketball", "."], answer: "My brother doesn't play basketball ." },
+
+    { subId: "5-BOSS", isBoss: true, japanese: "【BOSS】のび太の父はときどき新聞を読むんだ。（不要語1つ）", words: ["sometimes", "reading", "a", "father", "newspaper", "Nobita's", "reads", "."], targetWords: ["Nobita's", "father", "sometimes", "reads", "a", "newspaper", "."], answer: "Nobita's father sometimes reads a newspaper ." },
+
+    // STAGE 6
+    { subId: "6-1", hint: "「That is Toru Amuro.」に続けて", japanese: "あなたは彼を知っていますか。", words: ["Do", "you", "know", "him", "?"], answer: "Do you know him ?" },
+    { subId: "6-1", hint: "「That is Ai Haibara.」に続けて", japanese: "あなたは彼女が好きですか。", words: ["Do", "you", "like", "her", "?"], answer: "Do you like her ?" },
+    { subId: "6-1", japanese: "これはだれの帽子ですか。", words: ["Whose", "hat", "is", "this", "?"], answer: "Whose hat is this ?" },
+    { subId: "6-1", hint: "「Whose hat is this?」への返答", japanese: "それはルフィのものです。", words: ["It's", "Luffy's", "."], answer: "It's Luffy's ." },
+
+    { subId: "6-2", japanese: "あれはだれのギターですか。", words: ["Whose", "guitar", "is", "that", "?"], answer: "Whose guitar is that ?" },
+    { subId: "6-2", hint: "「Whose guitar is that?」への返答", japanese: "それは私のものです。", words: ["It's", "mine", "."], answer: "It's mine ." },
+    { subId: "6-2", japanese: "あなたは野球とバスケットボールのどちらをしますか。", words: ["Which", "do", "you", "play", ",", "baseball", "or", "basketball", "?"], answer: "Which do you play , baseball or basketball ?" },
+    { subId: "6-2", hint: "「Which do you play, baseball or basketball?」への返答", japanese: "私は野球をします。", words: ["I", "play", "baseball", "."], answer: "I play baseball ." },
+
+    { subId: "6-BOSS", isBoss: true, japanese: "【BOSS-Q】これは誰のメガネですか。（不要語1つ）", words: ["are", "Whose", "glasses", "these", "is", "?"], targetWords: ["Whose", "glasses", "are", "these", "?"], answer: "Whose glasses are these ?" },
+    { subId: "6-BOSS", isBoss: true, hint: "「Whose glasses are these?」への返答", japanese: "【BOSS-A】コナンのものです。（不要語1つ）", words: ["Conan's", "They're", "It's", "."], targetWords: ["They're", "Conan's", "."], answer: "They're Conan's ." },
+
+    // STAGE 7
+    { subId: "7-1", japanese: "ハチワレは今、歌っています。", words: ["Hachiware", "is", "singing", "now", "."], answer: "Hachiware is singing now ." },
+    { subId: "7-1", japanese: "ちいかわは今、泣いています。", words: ["Chiikawa", "is", "crying", "now", "."], answer: "Chiikawa is crying now ." },
+    { subId: "7-1", japanese: "私の兄は今、マンガを読んでいます。", words: ["My brother", "is", "reading", "manga", "now", "."], answer: "My brother is reading manga now ." },
+
+    { subId: "7-2", japanese: "あなたは今、音楽を聞いていますか。", words: ["Are", "you", "listening", "to music", "now", "?"], answer: "Are you listening to music now ?" },
+    { subId: "7-2", hint: "「Are you listening to music now?」への返答", japanese: "はい、聞いています。", words: ["Yes", ",", "I", "am", "."], answer: "Yes , I am ." },
+    { subId: "7-2", japanese: "コナンは紅茶を飲んでいますか。", words: ["Is", "Conan", "drinking", "tea", "?"], answer: "Is Conan drinking tea ?" },
+    { subId: "7-2", hint: "「Is Conan drinking tea?」への返答", japanese: "いいえ、飲んでいません。", words: ["No", ",", "he", "is", "not", "."], answer: "No , he does not ." },
+    { subId: "7-2", japanese: "あなたたちは何をしていますか。", words: ["What", "are", "you", "doing", "?"], answer: "What are you doing ?" },
+    { subId: "7-2", hint: "「What are you doing?」への返答", japanese: "私たちはダンスをしています。", words: ["We", "are", "dancing", "."], answer: "We are dancing ." },
+
+    { subId: "7-3", japanese: "なんてかわいいのでしょう！", words: ["How", "cute", "!"], answer: "How cute !" },
+    { subId: "7-3", japanese: "なんて大きなネコでしょう！", words: ["What", "a", "big", "cat", "!"], answer: "What a big cat !" },
+
+    { subId: "7-BOSS", isBoss: true, japanese: "【BOSS-Q】のび太は今、寝ていますか。（不要語1つ）", words: ["sleeping", "now", "Is", "sleep", "Nobita", "?"], targetWords: ["Is", "Nobita", "sleeping", "now", "?"], answer: "Is Nobita sleeping now ?" },
+    { subId: "7-BOSS", isBoss: true, hint: "「Is Nobita sleeping now?」への返答", japanese: "【BOSS-A】はい、寝ています。（不要語1つ）", words: ["he", "Yes", "are", "is", ",", "."], targetWords: ["Yes", ",", "he", "is", "."], answer: "Yes , he is ." },
+
+    // STAGE 8
+    { subId: "8-1", japanese: "コナンはもう一度新一に戻りたいと思っています。", words: ["Conan", "wants", "to", "be", "Shinichi", "again", "."], answer: "Conan wants to be Shinichi again ." },
+    { subId: "8-1", japanese: "さくらはいつも新しい英単語を使おうとします。", words: ["Sakura", "always", "tries", "to", "use", "new English words", "."], answer: "Sakura always tries to use new English words ." },
+
+    { subId: "8-2", japanese: "あなたはどこに行きたいですか。", words: ["Where", "do", "you", "want", "to", "go", "?"], answer: "Where do you want to go ?" },
+    { subId: "8-2", hint: "「Where do you want to go?」への返答", japanese: "私は沖縄に行きたいです。", words: ["I", "want", "to", "go", "to", "Okinawa", "."], answer: "I want to go to Okinawa ." },
+
+    { subId: "8-3", japanese: "蘭は幸せそうに見えます。", words: ["Ran", "looks", "happy", "."], answer: "Ran looks happy ." },
+    { subId: "8-3", japanese: "彼女の靴はきれいそうに見えません。", words: ["Her shoes", "do", "not", "look", "clean", "."], answer: "Her shoes do not look clean ." },
+
+    { subId: "8-BOSS", isBoss: true, japanese: "【BOSS】私はいつか宇宙に行きたいです。（不要語1つ）", words: ["space", "to", "went", "I", "someday", "go", "want", "to", "."], targetWords: ["I", "want", "to", "go", "to", "space", "someday", "."], answer: "I want to go to space someday ." },
+
+    // STAGE 9
+    { subId: "9-1", japanese: "聡太は先週将棋をしました。", words: ["Sota", "played", "shogi", "last week", "."], answer: "Sota played shogi last week ." },
+    { subId: "9-1", japanese: "私は昨日、公園でたくさんのイヌを見ました。", words: ["I", "saw", "many dogs", "in the park", "yesterday", "."], answer: "I saw many dogs in the park yesterday ." },
+    { subId: "9-1", japanese: "蘭と園子は春に清水寺を訪れました。", words: ["Ran and Sonoko", "visited", "Kiyomizu Temple", "in spring", "."], answer: "Ran and Sonoko visited Kiyomizu Temple in spring ." },
+    { subId: "9-1", japanese: "私は昨日の午後、いとこに会いました。", words: ["I", "met", "my cousin", "yesterday afternoon", "."], answer: "I met my cousin yesterday afternoon ." },
+    { subId: "9-1", japanese: "ドラえもんはのび太の宿題を手伝いました。", words: ["Doraemon", "helped", "Nobita", "with", "his homework", "."], answer: "Doraemon helped Nobita with his homework ." },
+    { subId: "9-1", japanese: "私たちは公園に行ってそこでサッカーをしました。", words: ["We", "went", "to the park", "and", "played soccer", "there", "."], answer: "We went to the park and played soccer there ." },
+
+    { subId: "9-2", japanese: "あなたは昨日英語を勉強しましたか。", words: ["Did", "you", "study", "English", "yesterday", "?"], answer: "Did you study English yesterday ?" },
+    { subId: "9-2", hint: "「Did you study English yesterday?」への返答", japanese: "はい、しました。", words: ["Yes", ",", "I", "did", "."], answer: "Yes , I did ." },
+    { subId: "9-2", japanese: "のび太は自分の部屋をそうじしましたか。", words: ["Did", "Nobita", "clean", "his room", "?"], answer: "Did Nobita clean his room ?" },
+    { subId: "9-2", hint: "「Did Nobita clean his room?」への返答", japanese: "いいえ、しませんでした。", words: ["No", ",", "he", "did", "not", "."], answer: "No , he did not ." },
+    { subId: "9-2", japanese: "あなたのお母さんは昨日ケーキを作りましたか。", words: ["Did", "your mother", "make", "a cake", "yesterday", "?"], answer: "Did your mother make a cake yesterday ?" },
+    { subId: "9-2", hint: "「Did your mother make a cake yesterday?」への返答", japanese: "いいえ、作りませんでした。", words: ["No", ",", "she", "didn't", "."], answer: "No , she didn't ." },
+    { subId: "9-2", japanese: "彼らは昨日、新しい本を何冊か買いましたか。", words: ["Did", "they", "buy", "any new books", "yesterday", "?"], answer: "Did they buy any new books yesterday ?" },
+    { subId: "9-2", hint: "「Did they buy any new books yesterday?」への返答", japanese: "はい、買いました。", words: ["Yes", ",", "they", "did", "."], answer: "Yes , they did ." },
+    { subId: "9-2", japanese: "ジャイアンは先月何の歌を歌いましたか。", words: ["What song", "did", "Gian", "sing", "last month", "?"], answer: "What song did Gian sing last month ?" },
+
+    { subId: "9-3", japanese: "灰原哀はコナンと一緒にロンドンへ行きませんでした。", words: ["Ai", "did", "not", "go", "to London", "with Conan", "."], answer: "Ai did not go to London with Conan ." },
+    { subId: "9-3", japanese: "私の兄は昨日サッカーの練習をしませんでした。", words: ["My brother", "didn't", "practice", "soccer", "yesterday", "."], answer: "My brother didn't practice soccer yesterday ." },
+    { subId: "9-3", japanese: "私たちは昨日、写真を撮りませんでした。", words: ["We", "did", "not", "take", "pictures", "yesterday", "."], answer: "We did not take pictures yesterday ." },
+    { subId: "9-3", japanese: "のび太は先週宿題をしませんでした。", words: ["Nobita", "did", "not", "do", "his homework", "last week", "."], answer: "Nobita did not do his homework last week ." },
+    { subId: "9-3", japanese: "私は今朝、牛乳を飲みませんでした。", words: ["I", "didn't", "drink", "milk", "this morning", "."], answer: "I didn't drink milk this morning ." },
+
+    { subId: "9-BOSS", isBoss: true, japanese: "【BOSS】昨日、私はピザを3枚食べました。（不要語1つ）", words: ["pizzas", "I", "eat", "yesterday", "three", "ate", "."], targetWords: ["I", "ate", "three", "pizzas", "yesterday", "."], answer: "I ate three pizzas yesterday ." },
+
+    // STAGE 10
+    { subId: "10-1", japanese: "あなたは昨日、忙しかったですか。", words: ["Were", "you", "busy", "yesterday", "?"], answer: "Were you busy yesterday ?" },
+    { subId: "10-1", hint: "「Were you busy yesterday?」への返答", japanese: "はい、忙しかったです。", words: ["Yes", ",", "I", "was", "."], answer: "Yes , I was ." },
+    { subId: "10-1", japanese: "コナンは以前、高校生でした。", words: ["Conan", "was", "a high school student", "before", "."], answer: "Conan was a high school student before ." },
+
+    { subId: "10-2", japanese: "出木杉はそのとき宿題をしていました。", words: ["Dekisugi", "was", "doing", "his homework", "then", "."], answer: "Dekisugi was doing his homework then ." },
+    { subId: "10-2", japanese: "私の友達は昨日の午後、公園を走っていませんでした。", words: ["My friends", "were", "not", "running", "in the park", "yesterday afternoon", "."], answer: "My friends were not running in the park yesterday afternoon ." },
+
+    { subId: "10-3", japanese: "あの木のそばに男の子が1人います。", words: ["There", "is", "a boy", "by that tree", "."], answer: "There is a boy by that tree ." },
+    { subId: "10-3", japanese: "学校の近くに公園はありますか。", words: ["Is", "there", "a park", "near the school", "?"], answer: "Is there a park near the school ?" },
+    { subId: "10-3", hint: "「Is there a park near the school?」への返答", japanese: "はい、あります。", words: ["Yes", ",", "there", "is", "."], answer: "Yes , there is ." },
+    { subId: "10-3", japanese: "机の上に帽子が4つあります。", words: ["There", "are", "four", "hats", "on the desk", "."], answer: "There are four hats on the desk ." },
+
+    { subId: "10-BOSS", isBoss: true, japanese: "【BOSS】あの木の下にネコが3匹います。（不要語1つ）", words: ["cats", "that", "There", "is", "three", "tree", "under", "are", "."], targetWords: ["There", "are", "three", "cats", "under", "that", "tree", "."], answer: "There are three cats under that tree ." }
+  ];
+
+  // 褒め言葉リスト
+  const praiseList = [
+    { en: "Perfect!", jp: "文句なし！英語の感覚バッチリ！" },
+    { en: "Brilliant!", jp: "冴えてる！頭の回転が速い！" },
+    { en: "Amazing!", jp: "すごい！語順マスターだね。" },
+    { en: "Awesome!", jp: "その調子！リズムよく解けてるよ。" },
+    { en: "Excellent!", jp: "完璧！迷いゼロの解答！" },
+    { en: "Bingo!", jp: "大正解！すばらしいスピード！" },
+    { en: "Great job!", jp: "お見事！この調子でいこう！" }
+  ];
+
+  const properNouns = [
+    "Hachiware", "Chiikawa", "Doraemon", "Doraemon's", "Osaka", "America", "Hokkaido",
+    "Hanshin Tigers", "Yomiuri Giants", "Conan", "Conan's", "Ms. Nakada", "Ai", "Luffy", "Luffy's",
+    "Gian", "Shohei Ohtani", "Nobita", "Nobita's", "Motoki Ohmori", "Hiroto Wakai", "Jaiko",
+    "Toru Amuro", "Ai Haibara", "Shinichi", "Sakura", "Ran", "Okinawa", "Sota", "Ran and Sonoko",
+    "Kiyomizu Temple", "Dekisugi", "English", "London"
+  ];
+
+  let currentMainStageId = "";
+  let currentSubStageId = "";
+  let currentQuestions = [];
+  let currentIndex = 0;
+  let userSelectedWords = [];
+  let availableWords = [];
+  let comboCount = 0;
+  let wrongCount = 0;
+
+  function isProperNoun(word) { return properNouns.includes(word); }
+  function isAlwaysCapitalI(word) { return word === "I" || word === "I'm"; }
+
+  function maskFirstLetter(word) {
+    if (isAlwaysCapitalI(word) || isProperNoun(word)) return word;
+    if (/^[.,?!]$/.test(word)) return word;
+    return word.charAt(0).toLowerCase() + word.slice(1);
+  }
+
+  function formatForAnswerBox(word, index) {
+    if (isAlwaysCapitalI(word) || isProperNoun(word)) return word;
+    if (/^[.,?!]$/.test(word)) return word;
+    if (index === 0) return word.charAt(0).toUpperCase() + word.slice(1);
+    return word.charAt(0).toLowerCase() + word.slice(1);
+  }
+
+  // --- ローカルストレージ ---
+  function getClearedSubStages() {
+    return JSON.parse(localStorage.getItem('wordorder_neon_cleared') || '[]');
+  }
+  function saveClearedSubStage(subId) {
+    const list = getClearedSubStages();
+    if (!list.includes(subId)) {
+      list.push(subId);
+      localStorage.setItem('wordorder_neon_cleared', JSON.stringify(list));
+    }
+  }
+
+  function getTotalExp() {
+    return parseInt(localStorage.getItem('wordorder_neon_exp') || '0', 10);
+  }
+  function addExp(amount) {
+    const total = getTotalExp() + amount;
+    localStorage.setItem('wordorder_neon_exp', total);
+    return total;
+  }
+
+  function updateDailyStreak() {
+    const today = new Date().toISOString().slice(0, 10);
+    const lastDate = localStorage.getItem('wordorder_neon_date');
+    let streak = parseInt(localStorage.getItem('wordorder_neon_streak') || '1', 10);
+    if (lastDate) {
+      const diffDays = Math.floor((new Date(today) - new Date(lastDate)) / (1000 * 60 * 60 * 24));
+      if (diffDays === 1) streak += 1;
+      else if (diffDays > 1) streak = 1;
+    }
+    localStorage.setItem('wordorder_neon_date', today);
+    localStorage.setItem('wordorder_neon_streak', streak);
+    return streak;
+  }
+
+  // --- メインメニュー画面 ---
+  function initMainMenu() {
+    const clearedSubs = getClearedSubStages();
+    const streak = updateDailyStreak();
+    const exp = getTotalExp();
+
+    document.getElementById('streak-days').innerText = `${streak}日連続`;
+    document.getElementById('exp-count').innerText = `${exp} pt`;
+
+    let clearedMainStagesCount = 0;
+    const stageBox = document.getElementById('stage-buttons');
+    stageBox.innerHTML = '';
+
+    mainStageList.forEach(m => {
+      const subs = subStageList.filter(s => s.stageId === m.id);
+      const isAllCleared = subs.every(s => clearedSubs.includes(s.id));
+      if (isAllCleared) clearedMainStagesCount++;
+
+      const btn = document.createElement('button');
+      btn.className = `btn-stage ${isAllCleared ? 'cleared' : ''}`;
+      btn.innerHTML = `
+        <div>
+          <span class="stage-num">${m.name}</span>
+          <span class="stage-name">${m.grammar}</span>
+        </div>
+        <span class="crest-badge">CLEAR!</span>
+      `;
+      btn.onclick = () => openSubStageMenu(m.id);
+      stageBox.appendChild(btn);
+    });
+
+    document.getElementById('stamps-count').innerText = `${clearedMainStagesCount} / 10`;
+  }
+
+  // --- サブステージ選択画面 ---
+  function openSubStageMenu(mainStageId) {
+    currentMainStageId = mainStageId;
+    const mainStage = mainStageList.find(m => m.id === mainStageId);
+    const clearedSubs = getClearedSubStages();
+
+    document.getElementById('main-menu-view').style.display = 'none';
+    document.getElementById('substage-menu-view').style.display = 'block';
+    document.getElementById('quiz-view').style.display = 'none';
+
+    document.getElementById('substage-main-title').innerText = mainStage.name;
+    document.getElementById('substage-heading').innerText = `${mainStage.name} : ${mainStage.grammar}`;
+
+    const subBox = document.getElementById('substage-buttons');
+    subBox.innerHTML = '';
+
+    const subs = subStageList.filter(s => s.stageId === mainStageId);
+    subs.forEach(s => {
+      const isCleared = clearedSubs.includes(s.id);
+      const btn = document.createElement('div');
+      btn.className = `substage-btn ${s.isBoss ? 'boss-card' : ''}`;
+      btn.innerHTML = `
+        <div>
+          <strong style="color: ${s.isBoss ? 'var(--neon-pink)' : '#fff'}; font-size: 15px;">${s.num}</strong>
+          <span style="margin-left: 8px; font-size: 14px; color: ${s.isBoss ? '#fecaca' : '#e2e8f0'};">${s.title}</span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <span class="substage-badge">${s.count} 問</span>
+          ${isCleared ? '<span style="color:var(--neon-green); font-weight:800; font-size:13px;">💮 CLEAR</span>' : ''}
+        </div>
+      `;
+      btn.onclick = () => startSubStage(s.id);
+      subBox.appendChild(btn);
+    });
+  }
+
+  function backToMainMenu() {
+    document.getElementById('substage-menu-view').style.display = 'none';
+    document.getElementById('main-menu-view').style.display = 'block';
+    initMainMenu();
+  }
+
+  function backToSubstageMenu() {
+    stopConfetti();
+    document.getElementById('quiz-view').style.display = 'none';
+    openSubStageMenu(currentMainStageId);
+  }
+
+  // --- クイズ画面 ---
+  function startSubStage(subId) {
+    currentSubStageId = subId;
+    currentQuestions = quizData.filter(q => q.subId === subId);
+    const subObj = subStageList.find(s => s.id === subId);
+
+    currentIndex = 0;
+    comboCount = 0;
+    updateComboDisplay();
+
+    document.getElementById('substage-menu-view').style.display = 'none';
+    document.getElementById('quiz-view').style.display = 'block';
+    document.getElementById('current-battle-title').innerText = `${subObj.num}: ${subObj.title}`;
+
+    const bossCard = document.getElementById('boss-card');
+    if (subObj.isBoss) {
+      bossCard.style.display = 'block';
+    } else {
+      bossCard.style.display = 'none';
+    }
+
+    loadQuestion(0);
+  }
+
+  function updateComboDisplay() {
+    const badge = document.getElementById('combo-display');
+    if (comboCount >= 2) {
+      badge.style.display = 'inline-block';
+      badge.innerText = `⚡ ${comboCount} COMBO!`;
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  function loadQuestion(index) {
+    const q = currentQuestions[index];
+    wrongCount = 0;
+
+    const progressPercent = ((index + 1) / currentQuestions.length) * 100;
+    document.getElementById('hp-progress').style.width = `${progressPercent}%`;
+    document.getElementById('progress').innerText = `第 ${index + 1} 問 / 全 ${currentQuestions.length} 問`;
+
+    const hintHtml = q.hint ? `<span class="context-hint">${q.hint}</span>` : '';
+    document.getElementById('jp-text').innerHTML = `${hintHtml}${q.japanese}`;
+    document.getElementById('result-box').style.display = 'none';
+
+    const maskedWords = q.words.map(w => maskFirstLetter(w));
+    let shuffled = [...maskedWords];
+    let attempts = 0;
+    do {
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      attempts++;
+    } while (shuffled.length > 1 && shuffled.join(' ') === maskedWords.join(' ') && attempts < 10);
+
+    availableWords = shuffled;
+    userSelectedWords = [];
+    render();
+  }
+
+  function render() {
+    const ansBox = document.getElementById('answer-box');
+    const optBox = document.getElementById('options-box');
+    ansBox.innerHTML = '';
+    optBox.innerHTML = '';
+
+    userSelectedWords.forEach((rawWord, idx) => {
+      const displayWord = formatForAnswerBox(rawWord, idx);
+      const chip = document.createElement('button');
+      chip.className = `chip ${idx === 0 ? 'chip-first' : ''}`;
+      chip.innerText = displayWord;
+      chip.onclick = () => removeWord(idx);
+      ansBox.appendChild(chip);
+    });
+
+    availableWords.forEach((word, idx) => {
+      const chip = document.createElement('button');
+      chip.className = 'chip';
+      chip.innerText = word;
+      chip.onclick = () => selectWord(idx);
+      optBox.appendChild(chip);
+    });
+  }
+
+  function selectWord(idx) {
+    userSelectedWords.push(availableWords.splice(idx, 1)[0]);
+    render();
+  }
+
+  function removeWord(idx) {
+    let word = userSelectedWords.splice(idx, 1)[0];
+    availableWords.push(maskFirstLetter(word));
+    render();
+  }
+
+  function resetCurrentQuestion() {
+    loadQuestion(currentIndex);
+  }
+
+  function checkAnswer() {
+    const q = currentQuestions[currentIndex];
+    const userTokens = userSelectedWords.map(w => w.toLowerCase()).join(' ');
+    const target = q.targetWords ? q.targetWords : q.words;
+    const correctTokens = target.map(w => w.toLowerCase()).join(' ');
+    const displayAns = q.answer.replace(/\s+([,\.?!])/g, '$1');
+
+    const resultBox = document.getElementById('result-box');
+    const title = document.getElementById('result-title');
+    const correctAns = document.getElementById('correct-answer-text');
+    const btnNext = document.getElementById('btn-next-action');
+
+    resultBox.style.display = 'block';
+
+    if (userTokens === correctTokens) {
+      comboCount++;
+      addExp(10);
+      updateComboDisplay();
+
+      const randomPraise = praiseList[Math.floor(Math.random() * praiseList.length)];
+      resultBox.className = 'result-box result-correct';
+      title.innerText = `⭕ 正解！ ${randomPraise.en}（${randomPraise.jp}）`;
+      correctAns.innerText = `正解: ${displayAns}`;
+      btnNext.style.display = 'block';
+      btnNext.innerText = '次の問題へ進む ▶';
+      btnNext.onclick = nextQuestion;
+    } else {
+      comboCount = 0;
+      wrongCount++;
+      updateComboDisplay();
+
+      const firstTargetWord = formatForAnswerBox(target[0], 0);
+      let lastTargetWord = target[target.length - 2];
+      if (!lastTargetWord || target.length <= 2) lastTargetWord = target[target.length - 1];
+
+      if (wrongCount === 1) {
+        resultBox.className = 'result-box result-hint';
+        title.innerText = '❌ おしい！ もう一度ならべ直してみよう！';
+        correctAns.innerHTML = `💡 <strong>ヒント (1/2):</strong> 1番目の単語は「<strong>${firstTargetWord}</strong>」だよ！`;
+        btnNext.style.display = 'none';
+      } else if (wrongCount === 2) {
+        resultBox.className = 'result-box result-hint';
+        title.innerText = '⚠️ もう一息！ ヒントを参考に考えてみよう！';
+        correctAns.innerHTML = `💡 <strong>ヒント (2/2):</strong> 最初は「<strong>${firstTargetWord}</strong>」、最後は「<strong>${lastTargetWord}</strong>」だよ！`;
+        btnNext.style.display = 'none';
+      } else {
+        resultBox.className = 'result-box result-wrong';
+        title.innerText = '答えを確認して次に進もう！';
+        correctAns.innerText = `正解: ${displayAns}`;
+        btnNext.style.display = 'block';
+        btnNext.innerText = '理解した！次へ進む ▶';
+        btnNext.onclick = nextQuestion;
+      }
+    }
+  }
+
+  function nextQuestion() {
+    if (currentIndex < currentQuestions.length - 1) {
+      currentIndex++;
+      loadQuestion(currentIndex);
+    } else {
+      saveClearedSubStage(currentSubStageId);
+      addExp(50);
+      showSubStageClearModal();
+    }
+  }
+
+  function showSubStageClearModal() {
+    startFullPageConfetti();
+    const subObj = subStageList.find(s => s.id === currentSubStageId);
+
+    const modal = document.getElementById('congrats-modal');
+    const title = document.getElementById('modal-title');
+    const desc = document.getElementById('modal-desc');
+
+    if (subObj.isBoss) {
+      document.getElementById('modal-icon').innerText = "👑 💥 🏆";
+      title.innerText = `${subObj.num} CLEAR!`;
+      desc.innerText = `ボスバトル撃破！不要語トラップを見破りました！`;
+    } else {
+      document.getElementById('modal-icon').innerText = "🎉 ⭕ ✨";
+      title.innerText = `${subObj.num} COMPLETE!`;
+      desc.innerText = `「${subObj.title}」をすべてクリアしました！`;
+    }
+
+    modal.style.display = 'flex';
+  }
+
+  function closeCongratsModal() {
+    document.getElementById('congrats-modal').style.display = 'none';
+    stopConfetti();
+    backToSubstageMenu();
+  }
+
+  // --- 全画面クラッカー演出 ---
+  let confettiAnimationId = null;
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  let confettiParticles = [];
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  function startFullPageConfetti() {
+    confettiParticles = [];
+    const colors = ['#00f0ff', '#ff2a85', '#a855f7', '#fde047', '#10b981'];
+    for (let i = 0; i < 90; i++) {
+      confettiParticles.push(createCrackerParticle(0, canvas.height, 1, colors));
+      confettiParticles.push(createCrackerParticle(canvas.width, canvas.height, -1, colors));
+    }
+    if (!confettiAnimationId) animateConfetti();
+  }
+
+  function createCrackerParticle(startX, startY, direction, colors) {
+    const angle = (direction === 1) 
+      ? (Math.random() * 40 + 35) * (Math.PI / 180)
+      : (Math.random() * 40 + 105) * (Math.PI / 180);
+    const velocity = Math.random() * 16 + 14;
+
+    return {
+      x: startX, y: startY,
+      vx: Math.cos(angle) * velocity,
+      vy: -Math.sin(angle) * velocity,
+      gravity: 0.38,
+      size: Math.random() * 10 + 6,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      angle: Math.random() * 360,
+      spin: Math.random() * 10 - 5,
+      friction: 0.985
+    };
+  }
+
+  function animateConfetti() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    confettiParticles.forEach((p) => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += p.gravity;
+      p.vx *= p.friction;
+      p.angle += p.spin;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate((p.angle * Math.PI) / 180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+      ctx.restore();
+    });
+    confettiAnimationId = requestAnimationFrame(animateConfetti);
+  }
+
+  function stopConfetti() {
+    if (confettiAnimationId) {
+      cancelAnimationFrame(confettiAnimationId);
+      confettiAnimationId = null;
+    }
+    confettiParticles = [];
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  window.addEventListener('DOMContentLoaded', initMainMenu);
+</script>
+</body>
+</html>
