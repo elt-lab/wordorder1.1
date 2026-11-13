@@ -353,13 +353,18 @@
       border: none;
       transition: all 0.2s;
     }
+    button:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      box-shadow: none !important;
+    }
     .btn-submit {
       background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
       border: 1px solid var(--neon-cyan);
       color: white;
       box-shadow: 0 0 14px var(--cyan-glow);
     }
-    .btn-submit:hover {
+    .btn-submit:hover:not(:disabled) {
       background: #0ea5e9;
       box-shadow: 0 0 20px var(--cyan-glow);
     }
@@ -368,7 +373,7 @@
       color: #cbd5e1;
       border: 1px solid #475569;
     }
-    .btn-reset:hover { background: rgba(71, 85, 105, 0.8); }
+    .btn-reset:hover:not(:disabled) { background: rgba(71, 85, 105, 0.8); }
     .btn-back {
       background: transparent;
       border: 1px solid rgba(255, 255, 255, 0.2);
@@ -535,8 +540,8 @@
     <div class="options-box" id="options-box"></div>
 
     <div class="btn-row">
-      <button class="btn-reset" onclick="resetCurrentQuestion()">リセット</button>
-      <button class="btn-submit" onclick="checkAnswer()">決定する</button>
+      <button class="btn-reset" id="btn-reset-action" onclick="resetCurrentQuestion()">リセット</button>
+      <button class="btn-submit" id="btn-submit-action" onclick="checkAnswer()">決定する</button>
     </div>
 
     <div class="result-box" id="result-box">
@@ -842,6 +847,7 @@
   let availableWords = [];
   let comboCount = 0;
   let wrongCount = 0;
+  let isAnswered = false; // ★連打防止用ロックフラグ
 
   function isProperNoun(word) { return properNouns.includes(word); }
   function isAlwaysCapitalI(word) { return word === "I" || word === "I'm"; }
@@ -1013,6 +1019,11 @@
   function loadQuestion(index) {
     const q = currentQuestions[index];
     wrongCount = 0;
+    isAnswered = false; // ★新しい問題になったのでロック解除
+
+    // ボタンを有効に戻す
+    document.getElementById('btn-submit-action').disabled = false;
+    document.getElementById('btn-reset-action').disabled = false;
 
     const progressPercent = ((index + 1) / currentQuestions.length) * 100;
     document.getElementById('hp-progress').style.width = `${progressPercent}%`;
@@ -1049,7 +1060,7 @@
       const chip = document.createElement('button');
       chip.className = `chip ${idx === 0 ? 'chip-first' : ''}`;
       chip.innerText = displayWord;
-      chip.onclick = () => removeWord(idx);
+      chip.onclick = () => { if (!isAnswered) removeWord(idx); }; // ★正解後は入れ替え不可
       ansBox.appendChild(chip);
     });
 
@@ -1057,7 +1068,7 @@
       const chip = document.createElement('button');
       chip.className = 'chip';
       chip.innerText = word;
-      chip.onclick = () => selectWord(idx);
+      chip.onclick = () => { if (!isAnswered) selectWord(idx); }; // ★正解後は選択不可
       optBox.appendChild(chip);
     });
   }
@@ -1074,10 +1085,13 @@
   }
 
   function resetCurrentQuestion() {
+    if (isAnswered) return; // ★正解後はリセット無効
     loadQuestion(currentIndex);
   }
 
   function checkAnswer() {
+    if (isAnswered) return; // ★すでに正解・完了している場合は連打を完全に無視
+
     const q = currentQuestions[currentIndex];
     const userTokens = userSelectedWords.map(w => w.toLowerCase()).join(' ');
     const target = q.targetWords ? q.targetWords : q.words;
@@ -1092,6 +1106,10 @@
     resultBox.style.display = 'block';
 
     if (userTokens === correctTokens) {
+      isAnswered = true; // ★即座にロックして連打によるコンボ・pt加算を遮断
+      document.getElementById('btn-submit-action').disabled = true;
+      document.getElementById('btn-reset-action').disabled = true;
+
       comboCount++;
       addExp(10);
       updateComboDisplay();
@@ -1123,6 +1141,10 @@
         correctAns.innerHTML = `💡 <strong>ヒント (2/2):</strong> 最初は「<strong>${firstTargetWord}</strong>」、最後は「<strong>${lastTargetWord}</strong>」だよ！`;
         btnNext.style.display = 'none';
       } else {
+        isAnswered = true; // ★3回目ミスで答え表示後もロック
+        document.getElementById('btn-submit-action').disabled = true;
+        document.getElementById('btn-reset-action').disabled = true;
+
         resultBox.className = 'result-box result-wrong';
         title.innerText = '答えを確認して次に進もう！';
         correctAns.innerText = `正解: ${displayAns}`;
